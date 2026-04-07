@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.noamgd3.unitconverter",
+      "sha256_cert_fingerprints": [
+        "9A:7B:E7:50:33:07:86:84:2B:46:77:C7:01:C7:4A:D7:9B:2E:DC:B7:41:52:ED:63:9C:84:D2:04:CC:17:7E:61"
+      ]
+    }
+  }
+]
