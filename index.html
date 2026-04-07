@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#16213e">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <title>Unit Converter</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 { font-size: 1.4rem; padding: 24px 0 16px; color: #e94560; }
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: #16213e;
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 24px;
+    }
+    .tab {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      color: #888;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab.active { background: #e94560; color: #fff; }
+    .card {
+      background: #16213e;
+      border-radius: 16px;
+      padding: 24px;
+      width: min(90vw, 360px);
+    }
+    label { font-size: 0.8rem; color: #888; display: block; margin-bottom: 6px; }
+    input, select {
+      width: 100%;
+      padding: 14px;
+      border: 2px solid #0f3460;
+      border-radius: 10px;
+      background: #1a1a2e;
+      color: #eee;
+      font-size: 1.1rem;
+      outline: none;
+      margin-bottom: 16px;
+      -webkit-appearance: none;
+    }
+    input:focus, select:focus { border-color: #e94560; }
+    select { cursor: pointer; }
+    .swap {
+      display: block;
+      margin: 0 auto 16px;
+      background: none;
+      border: 2px solid #0f3460;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      color: #e94560;
+      font-size: 1.4rem;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+    .swap:active { transform: rotate(180deg); }
+    .result {
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #e94560;
+      padding: 16px 0 8px;
+      word-break: break-all;
+    }
+    .result-label { text-align: center; font-size: 0.85rem; color: #888; }
+  </style>
+</head>
+<body>
+  <h1>Unit Converter</h1>
+
+  <div class="tabs">
+    <button class="tab active" data-cat="length">Length</button>
+    <button class="tab" data-cat="weight">Weight</button>
+    <button class="tab" data-cat="temp">Temp</button>
+  </div>
+
+  <div class="card">
+    <label>From</label>
+    <select id="from"></select>
+    <label>Value</label>
+    <input id="value" type="number" inputmode="decimal" placeholder="0" autofocus>
+    <button class="swap" id="swap">⇅</button>
+    <label>To</label>
+    <select id="to"></select>
+    <div class="result" id="result">0</div>
+    <div class="result-label" id="resultLabel"></div>
+  </div>
+
+  <script>
+    const units = {
+      length: {
+        Meter: 1, Kilometer: 1000, Centimeter: 0.01, Millimeter: 0.001,
+        Mile: 1609.344, Yard: 0.9144, Foot: 0.3048, Inch: 0.0254
+      },
+      weight: {
+        Kilogram: 1, Gram: 0.001, Milligram: 0.000001,
+        Pound: 0.453592, Ounce: 0.0283495, Ton: 1000
+      },
+      temp: { Celsius: 'C', Fahrenheit: 'F', Kelvin: 'K' }
+    };
+
+    let cat = 'length';
+    const $ = id => document.getElementById(id);
+
+    function populate() {
+      const keys = Object.keys(units[cat]);
+      $('from').innerHTML = keys.map((k, i) => `<option${i === 0 ? ' selected' : ''}>${k}</option>`).join('');
+      $('to').innerHTML = keys.map((k, i) => `<option${i === 1 ? ' selected' : ''}>${k}</option>`).join('');
+      convert();
+    }
+
+    function convert() {
+      const v = parseFloat($('value').value) || 0;
+      const f = $('from').value, t = $('to').value;
+      let r;
+      if (cat === 'temp') {
+        let c = f === 'Celsius' ? v : f === 'Fahrenheit' ? (v - 32) * 5 / 9 : v - 273.15;
+        r = t === 'Celsius' ? c : t === 'Fahrenheit' ? c * 9 / 5 + 32 : c + 273.15;
+      } else {
+        r = v * units[cat][f] / units[cat][t];
+      }
+      const display = Number.isInteger(r) ? r : parseFloat(r.toFixed(6));
+      $('result').textContent = display;
+      $('resultLabel').textContent = `${v} ${f} = ${display} ${t}`;
+    }
+
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelector('.tab.active').classList.remove('active');
+        tab.classList.add('active');
+        cat = tab.dataset.cat;
+        $('value').value = '';
+        populate();
+      });
+    });
+
+    $('swap').addEventListener('click', () => {
+      const tmp = $('from').value;
+      $('from').value = $('to').value;
+      $('to').value = tmp;
+      convert();
+    });
+
+    $('value').addEventListener('input', convert);
+    $('from').addEventListener('change', convert);
+    $('to').addEventListener('change', convert);
+
+    populate();
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+  </script>
+</body>
+</html>
